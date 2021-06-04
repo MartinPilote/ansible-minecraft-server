@@ -1,0 +1,17 @@
+---
+dependencies:
+
+galaxy_info:
+  author: Martin Pilote
+  description: 'Ansible role to install Minecraft server'
+  repository: 'https://github.com/MartinPilote/ansible-minecraft-server'
+  license: 'GPL-3.0-only'
+  min_ansible_version: 2.4
+  platforms:
+  - name: 'EL'
+    versions:
+    - all
+  galaxy_tags:
+    - minecraft
+    - server
+...

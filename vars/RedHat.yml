@@ -1,0 +1,4 @@
+minecraft_user: mcsvr
+minecraft_group: mcsvr
+
+minecraft_home: "/srv/minecraft/"

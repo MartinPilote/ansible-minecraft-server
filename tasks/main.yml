@@ -1,0 +1,51 @@
+---
+- name: Minecraft Server
+  block:
+    - include_vars: "{{ ansible_distribution }}.yml"
+
+    - name: install package
+      tags: packages,workstation-packages
+      package:
+        name:
+          - java-1.8.0-openjdk-headless
+        state: latest
+
+    - name: Create minecraft group
+      group:
+        name: "{{ minecraft_group }}"
+
+    - name: Create minecraft user
+      user:
+        name: "{{ minecraft_user }}"
+        create_home: no
+        group: "{{ minecraft_group }}"
+
+    - name: Creates directory
+      file:
+        path: "{{ minecraft_home }}"
+        state: directory
+        recurse: yes
+        owner: "{{ minecraft_user }}"
+        group: "{{ minecraft_group }}"
+        mode: 0775
+
+    - name: Download Minecraft Server
+      get_url:
+        url: "https://launcher.mojang.com/v1/objects/1b557e7b033b583cd9f66746b7a9ab1ec1673ced/server.jar"
+        dest: "{{ minecraft_home }}/server.jar"
+        owner: "{{ minecraft_user }}"
+        group: "{{ minecraft_group }}"
+        mode: 0775
+
+    - name: agree to EULA
+      copy:
+        src: eula.txt
+        dest: "{{ minecraft_home }}/eula.txt"
+        owner: "{{ minecraft_user }}"
+        group: "{{ minecraft_group }}"
+        mode: 0644
+
+  when:
+    - app_minecraft_server is defined
+    - app_minecraft_server is true
+...
