@@ -8,6 +8,7 @@
       package:
         name:
           - java-1.8.0-openjdk-headless
+          - tmux
         state: latest
 
     - name: Create minecraft group
@@ -44,6 +45,28 @@
         owner: "{{ minecraft_user }}"
         group: "{{ minecraft_group }}"
         mode: 0644
+
+    - name: Copy bash script
+      copy:
+        src: minecraft_server.sh
+        dest: "{{ minecraft_home }}/minecraft_server.sh"
+        owner: "{{ minecraft_user }}"
+        group: "{{ minecraft_group }}"
+        mode: 0775
+
+    
+    - name: Open port 25565/tcp
+      firewalld:
+        port: 25565/tcp
+        permanent: yes
+        state: enabled
+
+    - name: Reserve the huge pages
+      lineinfile:
+        dest: "/etc/sysctl.conf"
+        regexp: "^vm.nr_hugepages ="
+        line: "vm.nr_hugepages = 2860"
+
 
   when:
     - app_minecraft_server is defined
