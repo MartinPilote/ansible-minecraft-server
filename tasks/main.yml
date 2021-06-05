@@ -67,6 +67,25 @@
         regexp: "^vm.nr_hugepages ="
         line: "vm.nr_hugepages = 2860"
 
+    - name: Generate systemd file from template
+      template:
+        src: 'minecraft.service.j2'
+        dest: /etc/systemd/system/minecraft.service
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Put SELinux in permissive mode
+      selinux:
+        policy: targeted
+        state: permissive
+
+    - name: Enable daemon
+      service:
+        name: minecraft
+        enabled: yes
+        state: started
+
 
   when:
     - app_minecraft_server is defined
