@@ -3,6 +3,12 @@
   block:
     - include_vars: "{{ ansible_distribution }}.yml"
 
+    - name: Disable daemon
+      service:
+        name: minecraft
+        enabled: no
+        state: stopped
+
     - name: install package
       tags: packages,workstation-packages
       package:
@@ -30,13 +36,48 @@
         group: "{{ minecraft_group }}"
         mode: 0775
 
-    - name: Download Minecraft Server
-      get_url:
-        url: "https://launcher.mojang.com/v1/objects/1b557e7b033b583cd9f66746b7a9ab1ec1673ced/server.jar"
-        dest: "{{ minecraft_home }}/server.jar"
-        owner: "{{ minecraft_user }}"
-        group: "{{ minecraft_group }}"
-        mode: 0775
+    - name: Minecraft Forge
+      block:
+
+        - name: Download Minecraft Server
+          get_url:
+            url: "https://launcher.mojang.com/v1/objects/1b557e7b033b583cd9f66746b7a9ab1ec1673ced/server.jar"
+            dest: "{{ minecraft_home }}/server.jar"
+            owner: "{{ minecraft_user }}"
+            group: "{{ minecraft_group }}"
+            mode: 0775
+
+        - name: Set Server exec
+          set_fact:
+            app_minecraft_server_exec: "server.jar"
+
+      when:
+        - app_minecraft_server_flavor == "Mojang"
+
+    - name: Minecraft Forge
+      block:
+      
+        - name: Download Minecraft Forge
+          get_url:
+            url: "https://maven.minecraftforge.net/net/minecraftforge/forge/1.16.5-36.1.32/forge-1.16.5-36.1.32-installer.jar"
+            dest: "{{ minecraft_home }}/forge-1.16.5-36.1.32-installer.jar"
+            owner: "{{ minecraft_user }}"
+            group: "{{ minecraft_group }}"
+            mode: 0775
+
+        - name: Install Minecraft Forge
+          command:
+            chdir: "{{ minecraft_home }}"
+            cmd: "java -jar forge-1.16.5-36.1.32-installer.jar --installServer"
+          become: yes
+          become_user: mcsvr
+
+        - name: Set Server exec
+          set_fact:
+            app_minecraft_server_exec: "forge-1.16.5-36.1.4.jar"
+
+      when:
+        - app_minecraft_server_flavor == "Forge"
 
     - name: agree to EULA
       copy:
@@ -46,14 +87,13 @@
         group: "{{ minecraft_group }}"
         mode: 0644
 
-    - name: Copy bash script
-      copy:
-        src: minecraft_server.sh
+    - name: Generate bash script from template
+      template:
+        src: 'minecraft_server.sh.j2'
         dest: "{{ minecraft_home }}/minecraft_server.sh"
         owner: "{{ minecraft_user }}"
         group: "{{ minecraft_group }}"
         mode: 0775
-
     
     - name: Open port 25565/tcp
       firewalld:
